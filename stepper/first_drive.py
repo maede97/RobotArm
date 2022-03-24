@@ -1,4 +1,5 @@
 # import GPIO
+from time import sleep
 import RPi.GPIO as GPIO
 
 PORT_EN = 17
@@ -25,7 +26,9 @@ def setup():
 def step():
     # step the motor
     GPIO.output(PORT_STEP, GPIO.HIGH)
+    sleep(0.001)
     GPIO.output(PORT_STEP, GPIO.LOW)
+    sleep(0.001)
 
 def cleanup():
     # clean up the GPIO pins
@@ -33,9 +36,10 @@ def cleanup():
 
 
 if __name__ == "__main__":
-    setup()
+    try:
+        setup()
 
-    for i in range(10):
-        step()
-    
-    cleanup()
+        for i in range(10):
+            step()
+    finally:
+        cleanup()
