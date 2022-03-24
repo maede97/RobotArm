@@ -2,9 +2,9 @@
 from time import sleep
 import RPi.GPIO as GPIO
 
-PORT_EN = 17
-PORT_DIR = 27
-PORT_STEP = 22
+PORT_EN = 17 # (green)
+PORT_DIR = 27 # (red)
+PORT_STEP = 22 # (yellow)
 
 def setup():
     """ we have a single stepper motor, connected at the following ports:
