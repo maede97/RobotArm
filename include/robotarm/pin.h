@@ -4,8 +4,9 @@ namespace robotarm {
 
 class Pin {
 public:
-    Pin(int pin_number);
+    Pin(int pin_number = -1);
     static Pin get_default_led_pin();
+    static Pin NONE();
 
     ~Pin();
 
@@ -21,6 +22,9 @@ public:
     void toggle();
 
     int get_pin_number();
+
+private:
+    bool valid() const;
 
 private:
     int m_pin_number;
