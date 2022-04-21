@@ -1,7 +1,6 @@
 #pragma once
 
 #include <robotarm/pin.h>
-
 #include <string>
 
 namespace robotarm {
@@ -83,16 +82,16 @@ public:
     const uint8_t LCD_WIDTH = 160;
     const uint8_t LCD_HEIGHT = 80;
 
-    LCD(const Pin& CS /* chip select */, const Pin& RST /* reset */, const Pin& DC /* data / command */, const Pin& BL /* backlight */, const Pin& CLK = Pin(14) /* SPI clock */, const Pin& DIN = Pin(15) /* SPI TX */);
+    LCD(const Pin& CS /* chip select */, const Pin& RST /* reset */, const Pin& DC /* data / command */, const Pin& BL /* backlight */,
+        const Pin& CLK = Pin(14) /* SPI clock */, const Pin& DIN = Pin(15) /* SPI TX */);
 
     void init();
 
-    void draw_text(std::string text);
+    void draw_text(std::string text, LCD_COLOR fg_color = LCD_COLOR::WHITE);
+    void draw_circle(uint16_t x, uint16_t y, uint16_t radius, LCD_COLOR fg_color = LCD_COLOR::WHITE);
 
     void clear(LCD_COLOR color);
     void clear(uint16_t color);
-
-    void update();
 
 private:
     void write_command(LCD_COMMANDS command);
@@ -102,6 +101,9 @@ private:
     void reset();
     void set_cursor(uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end);
 
+    void draw_pixel(uint8_t x, uint8_t y, LCD_COLOR color);
+    void fill_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, LCD_COLOR color);
+    void draw_char(uint8_t x, uint8_t y, uint8_t c, LCD_COLOR fg_color, uint8_t size);
 private:
     Pin m_SCL;
     Pin m_RX;
@@ -110,10 +112,6 @@ private:
     Pin m_RES;
     Pin m_DC;
     Pin m_BL;
-
-    std::string m_text;
-
-    bool m_use_spi_1;
 };
 
 }  // namespace robotarm

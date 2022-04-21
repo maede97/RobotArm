@@ -19,22 +19,28 @@ int main(int argc, char const *argv[]) {
 
     robotarm::Pin button1(5);
     robotarm::Pin button2(6);
+    robotarm::Pin button3(7);
+    robotarm::Pin button4(8);
 
     button1.set_as_input();
     button2.set_as_input();
+    button3.set_as_input();
+    button4.set_as_input();
 
     robotarm::LCD screen(lcd_cs, lcd_res, lcd_dc, lcd_bl, lcd_clk, lcd_din);
     screen.init();
 
     int curr_col = 0;
 
-    screen.draw_text("Hello World!");
+    screen.draw_text("Hello World!", robotarm::LCD_COLOR::GREEN);
 
     screen.clear(robotarm::LCD_COLOR::WHITE);
 
     while (true) {
         bool b1 = button1.is_high();
         bool b2 = button2.is_high();
+        bool b3 = button3.is_high();
+        bool b4 = button4.is_high();
 
         if (b1) {
             curr_col++;
@@ -48,16 +54,11 @@ int main(int argc, char const *argv[]) {
                 curr_col = sizeof(colors) / sizeof(uint16_t) - 1;
             }
             screen.clear(colors[curr_col]);
+        } else if (b3) {
+            screen.draw_text("Hello World!", robotarm::LCD_COLOR::GREEN);
+        } else if (b4) {
+            screen.draw_circle(screen.LCD_WIDTH / 2, screen.LCD_HEIGHT / 2, 10, robotarm::LCD_COLOR::GREEN);
         }
-
-        //double s = 300. * (sin(loop) + 1.01);  // in [0, 2]
-        //led.blink(100, true);
-
-        //std::cout << "Blinking for " << s << " seconds" << std::endl;
-
-        //loop += 0.1;
-
-        screen.update();  // is this a problem that this is not called at a high frequency?
     }
 
     /*
