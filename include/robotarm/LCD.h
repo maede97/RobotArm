@@ -87,9 +87,13 @@ public:
 
     void init();
 
-    void draw_text(std::string text, LCD_COLOR fg_color = LCD_COLOR::WHITE);
-    void draw_circle(uint16_t x, uint16_t y, uint16_t radius, LCD_COLOR fg_color = LCD_COLOR::WHITE);
+    static uint8_t col_to_x(uint8_t col, uint8_t size);
+    static uint8_t row_to_y(uint8_t row, uint8_t size);
 
+    void draw_text(uint8_t x, uint8_t y, std::string text, uint8_t size = 1, bool wrap = false, LCD_COLOR fg_color = LCD_COLOR::WHITE, LCD_COLOR bg_color = LCD_COLOR::BLACK);
+    void draw_circle(uint8_t x, uint8_t y, uint8_t radius, LCD_COLOR fg_color = LCD_COLOR::WHITE);
+    void fill_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, LCD_COLOR color);
+    
     void clear(LCD_COLOR color);
     void clear(uint16_t color);
 
@@ -99,11 +103,11 @@ private:
 
     void delay(uint32_t ms);
     void reset();
-    void set_cursor(uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end);
+    void set_cursor(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end);
 
     void draw_pixel(uint8_t x, uint8_t y, LCD_COLOR color);
-    void fill_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, LCD_COLOR color);
-    void draw_char(uint8_t x, uint8_t y, uint8_t c, LCD_COLOR fg_color, uint8_t size);
+    
+    void draw_char(uint8_t x, uint8_t y, uint8_t c, LCD_COLOR fg_color, LCD_COLOR bg_color, uint8_t size);
 private:
     Pin m_SCL;
     Pin m_RX;

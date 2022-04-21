@@ -114,6 +114,14 @@ LCD::LCD(const Pin& CS, const Pin& RST, const Pin& DC, const Pin& BL, const Pin&
     m_BL = BL;
 }
 
+uint8_t LCD::col_to_x(uint8_t col, uint8_t size) {
+    return col * (size * 4);
+}
+
+uint8_t LCD::row_to_y(uint8_t row, uint8_t size) {
+    return row * (size * 7 + 3);
+}
+
 void LCD::delay(uint32_t ms) {
     sleep_ms(ms);
 }
@@ -128,7 +136,7 @@ void LCD::reset() {
 }
 
 void LCD::init() {
-    spi_init(spi1, 15000000);
+    spi_init(spi1, 32000000);
 
     // set pin directions
     m_CS.set_as_output();
@@ -245,7 +253,7 @@ void LCD::init() {
     delay(100);
 }
 
-void LCD::draw_circle(uint16_t x0, uint16_t y0, uint16_t r, LCD_COLOR color) {
+void LCD::draw_circle(uint8_t x0, uint8_t y0, uint8_t r, LCD_COLOR color) {
     int16_t f, ddF_x, ddF_y, x, y;
     f = 1 - r, ddF_x = 1, ddF_y = -2 * r, x = 0, y = r;
     draw_pixel(x0, y0 + r, color);
@@ -272,16 +280,11 @@ void LCD::draw_circle(uint16_t x0, uint16_t y0, uint16_t r, LCD_COLOR color) {
     }
 }
 
-void LCD::draw_text(std::string text, LCD_COLOR fg_color) {
-    uint8_t cursor_x, cursor_y;
+void LCD::draw_text(uint8_t x, uint8_t y, std::string text, uint8_t size, bool wrap, LCD_COLOR fg_color, LCD_COLOR bg_color) {
+    uint8_t cursor_x = x;
+    uint8_t cursor_y = y;
 
-    // TODO: via input
-    cursor_x = 0;
-    cursor_y = 0;
-    uint8_t size = 1;
-    bool wrap = true;
-
-    cursor_y += size * 7 + 3; // initial move down
+    //cursor_y += size * 7 + 3;  // initial move down
 
     uint16_t textlen = text.length();
 
@@ -296,7 +299,7 @@ void LCD::draw_text(std::string text, LCD_COLOR fg_color) {
                 goto skip;
         }
 
-        draw_char(cursor_x, cursor_y, text[i], fg_color, size);
+        draw_char(cursor_x, cursor_y, text[i], fg_color, bg_color, size);
         cursor_x += size * 4;
         if (cursor_x > LCD_WIDTH)
             cursor_x = LCD_WIDTH;
@@ -304,9 +307,7 @@ void LCD::draw_text(std::string text, LCD_COLOR fg_color) {
     }
 }
 
-void LCD::draw_char(uint8_t x, uint8_t y, uint8_t c, LCD_COLOR color, uint8_t size) {
-    LCD_COLOR bg = LCD_COLOR::BLACK;
-
+void LCD::draw_char(uint8_t x, uint8_t y, uint8_t c, LCD_COLOR color, LCD_COLOR bg_color, uint8_t size) {
     const uint8_t ascii_offset = 0x20;
     if ((x >= LCD_WIDTH) || (y >= LCD_HEIGHT))
         return;
@@ -324,11 +325,11 @@ void LCD::draw_char(uint8_t x, uint8_t y, uint8_t c, LCD_COLOR color, uint8_t si
                 } else {
                     fill_rect(x + (i * size), y + (j * size), size, size, color);
                 }
-            } else if (bg != color) {
+            } else if (bg_color != color) {
                 if (size == 1) {
-                    draw_pixel(x + i, y + j, bg);
+                    draw_pixel(x + i, y + j, bg_color);
                 } else {
-                    fill_rect(x + (i * size), y + (j * size), size, size, bg);
+                    fill_rect(x + (i * size), y + (j * size), size, size, bg_color);
                 }
             }
             line >>= 1;
@@ -383,23 +384,23 @@ void LCD::fill_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, LCD_COLOR color)
     m_CS.set_high();
 }
 
-void LCD::set_cursor(uint16_t x_start, uint16_t y_start, uint16_t x_end, uint16_t y_end) {
+void LCD::set_cursor(uint8_t x_start, uint8_t y_start, uint8_t x_end, uint8_t y_end) {
     y_start = y_start + 26;  // Y Offset
     y_end = y_end + 26;
     x_start = x_start + 1;  // X offset
     x_end = x_end + 1;
 
     write_command(LCD_COMMANDS::CASET);
-    write_data(x_start >> 8);
-    write_data(x_start & 0xFF);
-    write_data(x_end >> 8);
-    write_data(x_end & 0xFF);
+    write_data(0);
+    write_data(x_start);
+    write_data(0);
+    write_data(x_end);
 
     write_command(LCD_COMMANDS::RASET);
-    write_data(y_start >> 8);
-    write_data(y_start & 0xFF);
-    write_data(y_end >> 8);
-    write_data(y_end & 0xFF);
+    write_data(0);
+    write_data(y_start);
+    write_data(0);
+    write_data(y_end);
 
     write_command(LCD_COMMANDS::RAMWR);
 }

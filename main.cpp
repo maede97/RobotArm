@@ -3,111 +3,56 @@
 #include <robotarm/LCD.h>
 #include <robotarm/LED.h>
 #include <robotarm/io.h>
+#include <robotarm/menu.h>
 
 #include <iostream>
 
 int main(int argc, char const *argv[]) {
-    robotarm::IO::init_io();
+    using ScreenPtr = std::shared_ptr<robotarm::Screen>;
 
-    uint16_t colors[] = {0xFFFF, 0x0000, 0x001F, 0XF81F, 0XFFE0, 0X07FF, 0xF800, 0xF81F, 0x07E0, 0x7FFF, 0xFFE0,
-                         0XBC40, 0XFC07, 0X8430, 0X01CF, 0X7D7C, 0X5458, 0X841F, 0XC618, 0XA651, 0X2B12};
+    robotarm::IO::init_io();
 
     robotarm::LED led;
 
-    robotarm::Pin lcd_cs(9), lcd_res(10), lcd_dc(11), lcd_bl(4);
-    robotarm::Pin lcd_clk(14), lcd_din(15);
+    robotarm::Pin lcd_cs(9), lcd_res(10), lcd_dc(11), lcd_bl(4), lcd_clk(14), lcd_din(15);
 
     robotarm::Pin button1(5);
     robotarm::Pin button2(6);
     robotarm::Pin button3(7);
     robotarm::Pin button4(8);
 
-    button1.set_as_input();
-    button2.set_as_input();
-    button3.set_as_input();
-    button4.set_as_input();
+    robotarm::LCD lcd(lcd_cs, lcd_res, lcd_dc, lcd_bl, lcd_clk, lcd_din);
 
-    robotarm::LCD screen(lcd_cs, lcd_res, lcd_dc, lcd_bl, lcd_clk, lcd_din);
-    screen.init();
+    robotarm::Menu menu(lcd, button1, button2, button3, button4);
 
-    int curr_col = 0;
+    ScreenPtr screen_1 = std::make_shared<robotarm::Screen>("Main Menu", "What do you want to do?");
+    screen_1->register_callback_1("Blink", [&led]() { led.blink(500, true); });
+    screen_1->register_callback_2("FG", [&menu]() { menu.show_screen(1); });
+    screen_1->register_callback_3("BG", [&menu]() { menu.show_screen(2); });
+    screen_1->register_callback_4("Reset", [&menu]() {
+        menu.set_background_color(robotarm::LCD_COLOR::BLACK);
+        menu.set_text_color(robotarm::LCD_COLOR::WHITE);
+    });
 
-    screen.draw_text("Hello World!", robotarm::LCD_COLOR::GREEN);
+    ScreenPtr screen_2 = std::make_shared<robotarm::Screen>("Foreground", "Choose Text Color");
+    screen_2->register_callback_1("Green", [&menu]() { menu.set_text_color(robotarm::LCD_COLOR::GREEN); });
+    screen_2->register_callback_2("Yellow", [&menu]() { menu.set_text_color(robotarm::LCD_COLOR::YELLOW); });
+    screen_2->register_callback_3("MAIN", [&menu]() { menu.show_screen(0); });
+    screen_2->register_callback_4("BG", [&menu]() { menu.show_screen(2); });
 
-    screen.clear(robotarm::LCD_COLOR::WHITE);
+    ScreenPtr screen_3 = std::make_shared<robotarm::Screen>("Background", "Choose BG Color");
+    screen_3->register_callback_1("Red", [&menu]() { menu.set_background_color(robotarm::LCD_COLOR::RED); });
+    screen_3->register_callback_2("Blue", [&menu]() { menu.set_background_color(robotarm::LCD_COLOR::BLUE); });
+    screen_3->register_callback_3("MAIN", [&menu]() { menu.show_screen(0); });
+    screen_3->register_callback_4("FG", [&menu]() { menu.show_screen(1); });
 
-    while (true) {
-        bool b1 = button1.is_high();
-        bool b2 = button2.is_high();
-        bool b3 = button3.is_high();
-        bool b4 = button4.is_high();
-
-        if (b1) {
-            curr_col++;
-            if (curr_col >= sizeof(colors) / sizeof(uint16_t)) {
-                curr_col = 0;
-            }
-            screen.clear(colors[curr_col]);
-        } else if (b2) {
-            curr_col--;
-            if (curr_col < 0) {
-                curr_col = sizeof(colors) / sizeof(uint16_t) - 1;
-            }
-            screen.clear(colors[curr_col]);
-        } else if (b3) {
-            screen.draw_text("Hello World!", robotarm::LCD_COLOR::GREEN);
-        } else if (b4) {
-            screen.draw_circle(screen.LCD_WIDTH / 2, screen.LCD_HEIGHT / 2, 10, robotarm::LCD_COLOR::GREEN);
-        }
-    }
-
-    /*
-    robotarm::Pin led1(20), led2(21), led3(22), led4(26);
-    robotarm::Pin buzzer(27);
-    robotarm::Pin button1(16), button2(17), button3(2), button4(19);
-
-    button1.set_as_input();
-    button2.set_as_input();
-    button3.set_as_input();
-    button4.set_as_input();
+    menu.add_screen(screen_1);
+    menu.add_screen(screen_2);
+    menu.add_screen(screen_3);
 
     while (true) {
-        if (button1.is_high()) {
-            led1.set_high();
-        } else {
-            led1.set_low();
-        }
-
-        if (button2.is_high()) {
-            led2.set_high();
-        } else {
-            led2.set_low();
-        }
-
-        if (button3.is_high()) {
-            led3.set_high();
-        } else {
-            led3.set_low();
-        }
-
-        if (button4.is_high()) {
-            led4.set_high();
-        } else {
-            led4.set_low();
-        }
-
-        // sum up all buttons
-        // if >= 2, buzzer.set_high();
-        // else buzzer.set_low();
-        if (button1.is_high() + button2.is_high() + button3.is_high() + button4.is_high() >= 2) {
-            buzzer.set_high();
-        } else {
-            buzzer.set_low();
-        }
-
-        sleep_ms(50); // TODO: add to API somewhere
+        menu.update();
     }
-    */
 
     return 0;
 }
